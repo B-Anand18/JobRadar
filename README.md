@@ -262,7 +262,3 @@ All configuration is in `src/main/resources/application.yaml`:
 ## 📝 License
 
 This project is for educational purposes.
-
-## 👨‍💻 Author
-
-Built with ❤️ using Spring Boot
