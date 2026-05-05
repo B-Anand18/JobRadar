@@ -2,7 +2,7 @@
 
 Ever opened LinkedIn at 11 AM, found a "perfect match" job posted 3 hours ago, and saw **1000+ applicants** already? Yeah, me too. That's exactly why I built JobRadar.
 
-This Spring Boot application fetches fresh Java backend jobs from LinkedIn (last 24 hours only), filters them by location, and emails me every morning at 9 AM. No more scrolling through stale listings or competing with thousands of applicants.
+This Spring Boot application fetches fresh Software Engineering backend jobs from LinkedIn (last 24 hours only), filters them by location, and emails me every morning at 9 AM. No more scrolling through stale listings or competing with thousands of applicants.
 
 ## Why This Exists
 
