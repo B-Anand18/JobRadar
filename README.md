@@ -14,6 +14,9 @@ The job market moves fast. By the time you see a job posting on LinkedIn, hundre
 
 Basically, it's like having a personal recruiter who works while you sleep.
 
+<img width="380" height="549" alt="Screenshot 2026-05-05 150701" src="https://github.com/user-attachments/assets/3fc6a458-7e63-4554-a972-c8e8d83b5d2b" />
+
+
 ## Tech Stack
 
 - **Java 21** - Because why not use the latest LTS
@@ -263,11 +266,7 @@ All settings in `src/main/resources/application.yaml`:
 
 ## Future Improvements
 
-- [ ] Add support for multiple locations
-- [ ] Web UI for job browsing
 - [ ] Telegram/Slack notifications
-- [ ] Job application tracking
-- [ ] ML-based job relevance scoring
 - [ ] Multiple job boards (Naukri, Indeed)
 
 ## License
