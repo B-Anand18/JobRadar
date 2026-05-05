@@ -1,86 +1,133 @@
 # JobRadar - Java Backend Job Aggregator
 
-A production-ready Spring Boot application that fetches Java backend jobs from LinkedIn using TinyFish API, filters them by location (Bengaluru/Bangalore), and sends daily email notifications.
+Ever opened LinkedIn at 9 AM, found a "perfect match" job posted 12 hours ago, and saw **1000+ applicants** already? Yeah, me too. That's exactly why I built JobRadar.
 
-## 🚀 Features
+This Spring Boot application fetches fresh Java backend jobs from LinkedIn (last 24 hours only), filters them by location, and emails me every morning at 9 AM. No more scrolling through stale listings or competing with thousands of applicants.
 
-- ✅ Fetches jobs from LinkedIn via TinyFish API
-- ✅ Processes Server-Sent Events (SSE) streaming
-- ✅ Filters jobs by Bengaluru/Bangalore location
-- ✅ Deduplicates jobs by URL
-- ✅ Sends daily email with job listings
+## Why This Exists
+
+The job market moves fast. By the time you see a job posting on LinkedIn, hundreds have already applied. JobRadar gives you a fighting chance by:
+- Fetching jobs posted in the **last 24 hours only**
+- Filtering by your target location (Bengaluru in my case)
+- Delivering them straight to your inbox before your morning coffee
+- Deduplicating so you don't see the same job twice
+
+Basically, it's like having a personal recruiter who works while you sleep.
+
+## Tech Stack
+
+- **Java 21** - Because why not use the latest LTS
+- **Spring Boot 3.3** - Web, WebFlux, JPA, Mail
+- **PostgreSQL** - Render cloud database for persistence
+- **TinyFish API** - For LinkedIn job scraping via SSE streaming
+- **Maven** - Dependency management
+- **Render** - Cloud deployment
+
+## Features
+
+- ✅ Real-time job fetching via Server-Sent Events (SSE)
+- ✅ Location-based filtering (Bengaluru/Bangalore)
+- ✅ Automatic deduplication by job URL
+- ✅ Daily email notifications at 9 AM
 - ✅ Manual trigger via REST API
-- ✅ Scheduled daily execution at 9 AM
+- ✅ PostgreSQL persistence
 - ✅ Production-ready error handling
 - ✅ Comprehensive logging
 
-## 📋 Prerequisites
+## Architecture
+
+```
+JobController (REST API)
+    ↓
+JobOrchestratorService (Business Logic)
+    ↓
+TinyFishClientService (SSE Streaming) → SSEParserUtil
+    ↓
+JobFilterUtil (Location + Dedup)
+    ↓
+EmailService (Gmail SMTP)
+```
+
+Clean separation of concerns. Each layer does one thing well.
+
+## Setup
+
+### Prerequisites
 
 - Java 21
 - Maven 3.6+
 - Gmail account with App Password
 - TinyFish API key
+- PostgreSQL database (Render or local)
 
-## 🔧 Setup
-
-### 1. Clone the repository
+### 1. Clone & Configure
 
 ```bash
 cd JobRadar
 ```
 
-### 2. Configure Environment Variables
-
-Create a `.env` file in the project root (use `.env.example` as template):
+Create `.env` file:
 
 ```env
-TINYFISH_API_KEY=your_tinyfish_api_key_here
+# TinyFish API
+TINYFISH_API_KEY=your_api_key
+
+# PostgreSQL (Render)
+DATABASE_URL=jdbc:postgresql://your-host.render.com:5432/your_db
+DB_USERNAME=your_username
+DB_PASSWORD=your_password
+
+# Gmail
 MAIL_USERNAME=your_email@gmail.com
 MAIL_PASSWORD=your_gmail_app_password
 MAIL_TO=recipient@example.com
+
+# Optional
 PORT=8080
 SCHEDULER_ENABLED=true
 ```
 
-### 3. Gmail App Password Setup
+### 2. Gmail App Password
 
-1. Go to Google Account Settings
-2. Enable 2-Factor Authentication
-3. Generate App Password: https://myaccount.google.com/apppasswords
-4. Use the generated password in `MAIL_PASSWORD`
+1. Enable 2FA on your Google account
+2. Generate App Password: https://myaccount.google.com/apppasswords
+3. Use that password in `MAIL_PASSWORD`
 
-### 4. Build the Application
+### 3. PostgreSQL Setup (Render)
+
+1. Create PostgreSQL database on Render
+2. Copy the **External Database URL**
+3. Convert `postgresql://user:pass@host/db` to `jdbc:postgresql://host:5432/db`
+4. Add credentials to `.env`
+
+### 4. Build & Run
 
 ```bash
 mvn clean package
-```
-
-### 5. Run the Application
-
-```bash
 java -jar target/jobradar-0.0.1-SNAPSHOT.jar
 ```
 
-Or using Maven:
+Or:
 
 ```bash
 mvn spring-boot:run
 ```
 
-## 🌐 API Endpoints
+## API Endpoints
 
 ### Manual Job Fetch
 
-**Endpoint:** `POST /api/jobs/run-now`
+```bash
+POST /api/jobs/run-now
+```
 
-**Description:** Manually triggers the job fetch pipeline
+Triggers the job pipeline manually. Useful for testing or when you can't wait for the 9 AM cron.
 
-**Example:**
 ```bash
 curl -X POST http://localhost:8080/api/jobs/run-now
 ```
 
-**Success Response:**
+**Response:**
 ```json
 {
   "status": "success",
@@ -88,33 +135,15 @@ curl -X POST http://localhost:8080/api/jobs/run-now
 }
 ```
 
-**Error Response:**
-```json
-{
-  "status": "error",
-  "message": "Job fetch pipeline failed: <error details>"
-}
-```
-
 ### Health Check
 
-**Endpoint:** `GET /actuator/health`
-
-**Example:**
 ```bash
-curl http://localhost:8080/actuator/health
+GET /actuator/health
 ```
 
-## ⏰ Scheduled Execution
+## Email Format
 
-The application automatically runs daily at **9:00 AM** (configurable via `scheduler.cron` in `application.yaml`).
-
-To disable scheduled execution:
-```env
-SCHEDULER_ENABLED=false
-```
-
-## 📧 Email Format
+You'll get something like this every morning:
 
 ```
 Found 3 Java Backend Job(s) in Bengaluru:
@@ -138,60 +167,31 @@ Found 3 Java Backend Job(s) in Bengaluru:
 This is an automated email from JobRadar.
 ```
 
-## 🏗️ Architecture
+## Scheduled Execution
 
-```
-Controller (REST API)
-    ↓
-JobOrchestratorService
-    ↓
-TinyFishClientService → SSEParserUtil
-    ↓
-JobFilterUtil (Location + Dedup)
-    ↓
-EmailService
+Runs daily at **9:00 AM** (configurable in `application.yaml`).
+
+To disable:
+```env
+SCHEDULER_ENABLED=false
 ```
 
-## 📦 Project Structure
+## Project Structure
 
 ```
 com.dev.jobradar
-├── controller/
-│   └── JobController.java
-├── client/
-│   └── TinyFishClientService.java
-├── service/
-│   ├── JobOrchestratorService.java
-│   └── EmailService.java
-├── model/
-│   └── JobDTO.java
-├── scheduler/
-│   └── JobScheduler.java
-├── config/
-│   └── WebClientConfig.java
-├── util/
-│   ├── SSEParserUtil.java
-│   └── JobFilterUtil.java
+├── controller/          # REST API endpoints
+├── client/              # TinyFish API integration
+├── service/             # Business logic (orchestration, email)
+├── model/               # DTOs
+├── repository/          # JPA repositories
+├── scheduler/           # Cron jobs
+├── config/              # WebClient, beans
+├── util/                # SSE parsing, filtering
 └── JobradarApplication.java
 ```
 
-## 🔍 Logging
-
-Application logs include:
-- SSE event processing
-- Job extraction count
-- Filter results
-- Email sending status
-- Error details
-
-Log level can be adjusted in `application.yaml`:
-```yaml
-logging:
-  level:
-    com.dev.jobradar: INFO
-```
-
-## 🚢 Deployment (Render)
+## Deployment (Render)
 
 ### 1. Push to GitHub
 
@@ -205,64 +205,75 @@ git push -u origin main
 
 ### 2. Deploy on Render
 
-1. Create new Web Service on Render
-2. Connect your GitHub repository
+1. Create **PostgreSQL** database first
+2. Create **Web Service** from GitHub repo
 3. Configure:
    - **Build Command:** `mvn clean package`
    - **Start Command:** `java -jar target/jobradar-0.0.1-SNAPSHOT.jar`
 4. Add Environment Variables:
    - `TINYFISH_API_KEY`
+   - `DATABASE_URL` (from PostgreSQL, convert to JDBC format)
+   - `DB_USERNAME`
+   - `DB_PASSWORD`
    - `MAIL_USERNAME`
    - `MAIL_PASSWORD`
    - `MAIL_TO`
-   - `PORT` (Render provides this automatically)
+   - `PORT` (Render provides this)
 
-## 🧪 Testing
+## Configuration
 
-### Test Manual Trigger
-```bash
-curl -X POST http://localhost:8080/api/jobs/run-now
-```
+All settings in `src/main/resources/application.yaml`:
 
-### Check Logs
-Monitor application logs for:
-- Job fetch status
-- Filter results
-- Email sending confirmation
-
-### Verify Email
-Check recipient inbox for job listings email.
-
-## ⚙️ Configuration
-
-All configuration is in `src/main/resources/application.yaml`:
-
+- **Database:** PostgreSQL connection, Hibernate settings
 - **TinyFish API:** Base URL, timeout, LinkedIn search URL
 - **Email:** SMTP settings, recipient, subject
 - **Scheduler:** Cron expression, enable/disable
-- **Server:** Port configuration
+- **Logging:** Log levels
 
-## 🛠️ Troubleshooting
+## Troubleshooting
 
-### Email Not Sending
-- Verify Gmail App Password is correct
-- Check 2FA is enabled on Gmail account
+**Email not sending?**
+- Verify Gmail App Password
+- Check 2FA is enabled
 - Review logs for SMTP errors
 
-### No Jobs Fetched
-- Verify TinyFish API key is valid
+**No jobs fetched?**
+- Verify TinyFish API key
 - Check API timeout settings
-- Review TinyFish API logs
+- Review TinyFish logs
 
-### Scheduler Not Running
+**Database connection failed?**
+- Ensure `DATABASE_URL` starts with `jdbc:postgresql://`
+- Verify credentials are correct
+- Check Render database is active
+
+**Scheduler not running?**
 - Ensure `SCHEDULER_ENABLED=true`
-- Verify `@EnableScheduling` is present in main class
-- Check cron expression syntax
+- Verify cron expression syntax
+- Check logs for scheduler initialization
 
-## 📝 License
+## What I Learned
 
-This project is for educational purposes.
+- **SSE Streaming:** Handling Server-Sent Events in Spring WebFlux
+- **Async Processing:** Non-blocking I/O for API calls
+- **Email Integration:** SMTP configuration and error handling
+- **Cloud Deployment:** Render PostgreSQL + Web Service setup
+- **Cron Jobs:** Spring's @Scheduled annotation
+- **Environment Management:** .env files with spring-dotenv
 
-## 👨‍💻 Author
+## Future Improvements
 
-Built with ❤️ using Spring Boot
+- [ ] Add support for multiple locations
+- [ ] Web UI for job browsing
+- [ ] Telegram/Slack notifications
+- [ ] Job application tracking
+- [ ] ML-based job relevance scoring
+- [ ] Multiple job boards (Naukri, Indeed)
+
+## License
+
+MIT - Do whatever you want with it.
+
+---
+
+Built out of frustration with the job market. If this helps you land a job, let me know!
