@@ -3,6 +3,7 @@ package com.dev.jobradar.util;
 import com.dev.jobradar.model.JobDTO;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -36,16 +37,14 @@ public class JobFilterUtil {
 
         int originalSize = jobs.size();
         
-        List<JobDTO> deduplicated = jobs.stream()
+        List<JobDTO> deduplicated = new ArrayList<>(jobs.stream()
                 .filter(job -> job.getJobUrl() != null && !job.getJobUrl().isBlank())
                 .collect(Collectors.toMap(
                         JobDTO::getJobUrl,
                         job -> job,
                         (existing, replacement) -> existing
                 ))
-                .values()
-                .stream()
-                .collect(Collectors.toList());
+                .values());
 
         int duplicatesRemoved = originalSize - deduplicated.size();
         if (duplicatesRemoved > 0) {

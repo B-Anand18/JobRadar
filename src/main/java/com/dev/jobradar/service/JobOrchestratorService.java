@@ -16,6 +16,7 @@ public class JobOrchestratorService {
 
     private final TinyFishClientService tinyFishClientService;
     private final EmailService emailService;
+    private final JobService jobService;
 
     public void executeJobPipeline() {
         log.info("=== Starting Job Pipeline Execution ===");
@@ -39,9 +40,18 @@ public class JobOrchestratorService {
                 return;
             }
 
-            // Step 3: Send email with job listings
-            log.info("Step 3: Sending email with {} jobs", filteredJobs.size());
-            emailService.sendJobListings(filteredJobs);
+            // Step 3: Filter new jobs and save to database
+            log.info("Step 3: Checking for new jobs in database");
+            List<JobDTO> newJobs = jobService.filterAndSaveNewJobs(filteredJobs);
+
+            if (newJobs.isEmpty()) {
+                log.info("No new jobs found. All jobs already exist in database.");
+                return;
+            }
+
+            // Step 4: Send email with new job listings
+            log.info("Step 4: Sending email with {} new jobs", newJobs.size());
+            emailService.sendJobListings(newJobs);
 
             log.info("=== Job Pipeline Execution Completed Successfully ===");
 

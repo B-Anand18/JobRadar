@@ -31,6 +31,12 @@ target/
 # Environment variables
 .env
 
+# H2 Database
+data/
+*.db
+*.mv.db
+*.trace.db
+
 # OS
 .DS_Store
 Thumbs.db
